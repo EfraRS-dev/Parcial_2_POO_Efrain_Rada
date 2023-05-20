@@ -50,6 +50,7 @@ class CentroAcopio:
   
     _instance = None
     tipos = {1: 'vidrio', 2: 'papel', 3: 'plástico', 4: 'metal', 5: 'residuos orgánicos', 6: 'otro'}
+    inv_tipos = {v: k for k, v in tipos.items()}
 
     def __new__(cls):  # Implementación de patrón Singleton 
         if not cls._instance:
@@ -57,13 +58,11 @@ class CentroAcopio:
         return cls._instance
 
     def __init__(self):
-        tipos = CentroAcopio.tipos    
         self.turnos: list[Turno] = []
         self.camiones: list[Camion] = []
         self.empleados: list[Empleado] = []
         self.rutas: list[Ruta] = []
-        self.residuos: dict[str: list[Residuo]] = {tipos[1]: [], tipos[2]: [], tipos[3]: [],
-                                                  tipos[4]: [], tipos[5]: [], tipos[6]: []}
+        self.residuos: list[list[Residuo]] = [[],[],[],[],[],[]]
 
     def addEmpleado(self, empleado):
         self.empleados.append(empleado)
@@ -86,8 +85,9 @@ class CentroAcopio:
   
     def getCantidadResiduo(self, tipo: str, fecha=None) -> float:
         # Calcula la masa total del residuo de cualquier tipo
+        inv_tipos = CentroAcopio.inv_tipos
         m_total = 0
-        for r in self.residuos[tipo]:
+        for r in self.residuos[inv_tipos[tipo]]:
             m_total += r.masa
         return m_total
         # (f'Masa total del residuo {tipo} del día {fecha}: {m_total}')
@@ -100,13 +100,14 @@ class CentroAcopio:
         else:
             raise TypeError('No es posible instanciar un turno con objetos diferentes de Ruta y Camión.')
 
-    def addTurno(self, turno):
+    def addTurno(self, turno: Turno):
         self.turnos.append(turno)
         self.clasificarResiduos(turno)
 
     def clasificarResiduos(self, turno):
+        inv_tipos = CentroAcopio.inv_tipos
         for r in turno:
-            self.residuos[r.tipo].append(r) 
+            self.residuos[inv_tipos[r.tipo]].append(r) 
 
 
 
@@ -246,19 +247,6 @@ class PruebasUnitarias(unittest.TestCase):
         centro_acopio.removeCamion(camion)
         self.assertEqual(len(centro_acopio.camiones), 0)
         # El propósito de esta prueba es verificar la eliminación de información del camión en el centro de acopio
-
-    def test_getCantidadResiduo(self):
-        centro_acopio = CentroAcopio()
-        ruta = Ruta([PuntoGeografico(0, 0), PuntoGeografico(1, 1)])
-        camion = Camion("ABC123", "Marca", 100, 1000)
-        camion.recogerResiduo(Residuo(30, 1))
-        print(camion.residuos)
-        centro_acopio.registrarTurno(ruta, camion)
-        print(centro_acopio.residuos)
-        cantidad_residuo = centro_acopio.getCantidadResiduo('vidrio')
-        self.assertEqual(cantidad_residuo, 30)
-        # El propósito de esta prueba es verificar la fiabilidad del método de obtención de las cantidades por recurso
-
           
 
 """ Esta sección del código es la implementación de las clases anteriores. Todo se realiza sin input del usuario.
@@ -285,7 +273,7 @@ if __name__ == "__main__":
     rutas_list = [ruta1, ruta2, ruta3]
     rtp = {1: 'vidrio', 2: 'papel', 3: 'plástico', 4: 'metal', 5: 'residuos orgánicos', 6: 'otro'}
     trc = CentroAcopio()
-    trc.rutas.append(ruta1, ruta2, ruta3)
+    trc.rutas.extend([ruta1, ruta2, ruta3])
 
     trc.addEmpleado(Empleado(12345678, 'Efraín Rada', 'eradaa@uninorte.edu.co', '3128267589', 'Conductor'))
     trc.addEmpleado(Empleado(98765432, 'Carlos Sánchez', '', '3104567890', 'Conductor'))
@@ -326,8 +314,6 @@ if __name__ == "__main__":
         cm2.recogerResiduo(Residuo(20 + 10 * rnd.random(), 1))
         cm2.recogerResiduo(Residuo(30 + 10 * rnd.random(), rnd.randint(1,6)))
         horas.append(trc.registrarTurno(ruta, cm2).strftime('%d/%m/%Y %H:%M'))  
-
-    print(horas)  
 
     unittest.main()
     

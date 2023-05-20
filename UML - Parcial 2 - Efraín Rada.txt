@@ -22,7 +22,7 @@ class CentroAcopio {
     - camiones: list[Camión]
     - empleados: list[Empleado]
     - rutas: list[Ruta]
-    - residuos: dict[str: list[Residuo]]
+    - residuos: list[list[Residuo]]
     + addEmpleado(Empleado)
     + addCamion(Camion)
     + removeEmpleado(Empleado)
@@ -70,8 +70,8 @@ class Ruta {
 }
 
 Turno "1" *-- "1" Ruta
-Turno "1" o-- "1" Camion
-Turno "1" *-- "n" Residuo
+Turno "1" *-- "1" Camion
+Turno "1" <-- "n" Residuo
 Turno *-- IteradorResiduosTurno
 
 CentroAcopio "1" <-- Turno
@@ -79,8 +79,8 @@ CentroAcopio "1" <-- Camion
 CentroAcopio "1" <-- Empleado
 CentroAcopio -- CentroAcopio: Singleton
 
-Camion o-- Empleado
-Camion "1" -- "n" Residuo
+Camion "1" o-- "3" Empleado
+Camion "1" *-- "n" Residuo
 PuntoGeografico "n" --* "1" Ruta
 
 @enduml
