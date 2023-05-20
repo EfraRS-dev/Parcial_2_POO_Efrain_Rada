@@ -26,6 +26,7 @@ class Turno:
         return self.camion.personal
 
 
+
 class IteradorResiduosTurno:
 
     def __init__(self, datos) -> None:
@@ -42,6 +43,7 @@ class IteradorResiduosTurno:
                 return valor
             else:
                 raise StopIteration
+
 
 
 class CentroAcopio:
@@ -82,21 +84,21 @@ class CentroAcopio:
             print('El camión no pudo ser eliminado. No existe.')
 
   
-    def getCantidadResiduo(self, tipo: str) -> float:
+    def getCantidadResiduo(self, tipo: str, fecha=None) -> float:
         # Calcula la masa total del residuo de cualquier tipo
         m_total = 0
-        for t in self.turnos: 
-            for r in t:
-                if r.tipo == tipo:
-                        m_total += r.masa
-        return m_total 
+        for r in self.residuos[tipo]:
+            m_total += r.masa
+        return m_total
         # (f'Masa total del residuo {tipo} del día {fecha}: {m_total}')
 
     def registrarTurno(self, ruta, camion):
         if isinstance(ruta, Ruta) and isinstance(camion, Camion):
-            self.addTurno(Turno(ruta, camion))
+            turno_new = Turno(ruta, camion)
+            self.addTurno(turno_new)
+            return turno_new.h_inicio
         else:
-            raise TypeError
+            raise TypeError('No es posible instanciar un turno con objetos diferentes de Ruta y Camión.')
 
     def addTurno(self, turno):
         self.turnos.append(turno)
@@ -105,6 +107,7 @@ class CentroAcopio:
     def clasificarResiduos(self, turno):
         for r in turno:
             self.residuos[r.tipo].append(r) 
+
 
 
 class Empleado:
@@ -127,6 +130,7 @@ class PuntoGeografico:
 
     def __repr__(self) -> str:
        return f'({self.latitud}, {self.longitud})'
+
 
 
 class Camion:
@@ -182,6 +186,9 @@ class Residuo:
         self.masa: float = masa
         self.tipo: str = Residuo.tipos[tipo]
 
+    def __repr__(self) -> str:
+        return f'{self.tipo} - {self.masa} kg.'
+
 
 
 class Ruta:
@@ -189,20 +196,73 @@ class Ruta:
         self.ubicaciones: list[PuntoGeografico] = puntos
 
 
-""" A partir de aquí, se definirá la clase de pruebas unitarias y sus respectivas pruebas con el módulo Unittest  """
+""" A partir de aquí, se definirá la clase de pruebas unitarias y sus respectivas pruebas con el módulo Unittest. """
 
 class PruebasUnitarias(unittest.TestCase):
+
     def test_excepcionRegistroTurno(self):
         sistema_test = CentroAcopio()
         self.assertRaises(TypeError, CentroAcopio.registrarTurno, sistema_test, 1, 'str')
+         # El propósito de esta prueba es verificar el manejo de errores en la creación de turnos
 
-    def test_getResiduos(self):
-        sistema_test = CentroAcopio()
-        self.assertIsInstance()
+    def test_registrarTurno(self):
+        centro_acopio = CentroAcopio()
+        ruta = Ruta([PuntoGeografico(0, 0), PuntoGeografico(1, 1)])
+        camion = Camion("ABC123", "Marca", 100, 1000)
+        centro_acopio.registrarTurno(ruta, camion)
+        self.assertEqual(len(centro_acopio.turnos), 1)
+        self.assertEqual(centro_acopio.turnos[0].ruta, ruta)
+        self.assertEqual(centro_acopio.turnos[0].camion, camion)
+        # El propósito de esta prueba es verificar la inserción de información del turno en el centro de acopio
+
+    def test_addEmpleado(self):
+        centro_acopio = CentroAcopio()
+        empleado = Empleado(1, "Nombre", "correo@example.com", 1234567890, "Tipo")
+        centro_acopio.addEmpleado(empleado)
+        self.assertEqual(len(centro_acopio.empleados), 1)
+        self.assertEqual(centro_acopio.empleados[0], empleado)
+        # El propósito de esta prueba es verificar la inserción de información del empleado en el centro de acopio
+
+    def test_removeEmpleado(self):
+        centro_acopio = CentroAcopio()
+        empleado = Empleado(1, "Nombre", "correo@example.com", 1234567890, "Tipo")
+        centro_acopio.addEmpleado(empleado)
+        centro_acopio.removeEmpleado(empleado)
+        self.assertEqual(len(centro_acopio.empleados), 0)
+        # El propósito de esta prueba es verificar la eliminación de información del empleado en el centro de acopio
+
+    def test_addCamion(self):
+        centro_acopio = CentroAcopio()
+        camion = Camion("ABC123", "Marca", 100, 1000)
+        centro_acopio.addCamion(camion)
+        self.assertEqual(len(centro_acopio.camiones), 1)
+        self.assertEqual(centro_acopio.camiones[0], camion)
+        # El propósito de esta prueba es verificar la inserción de información del camión en el centro de acopio
+
+    def test_removeCamion(self):
+        centro_acopio = CentroAcopio()
+        camion = Camion("ABC123", "Marca", 100, 1000)
+        centro_acopio.addCamion(camion)
+        centro_acopio.removeCamion(camion)
+        self.assertEqual(len(centro_acopio.camiones), 0)
+        # El propósito de esta prueba es verificar la eliminación de información del camión en el centro de acopio
+
+    def test_getCantidadResiduo(self):
+        centro_acopio = CentroAcopio()
+        ruta = Ruta([PuntoGeografico(0, 0), PuntoGeografico(1, 1)])
+        camion = Camion("ABC123", "Marca", 100, 1000)
+        camion.recogerResiduo(Residuo(30, 1))
+        print(camion.residuos)
+        centro_acopio.registrarTurno(ruta, camion)
+        print(centro_acopio.residuos)
+        cantidad_residuo = centro_acopio.getCantidadResiduo('vidrio')
+        self.assertEqual(cantidad_residuo, 30)
+        # El propósito de esta prueba es verificar la fiabilidad del método de obtención de las cantidades por recurso
 
           
 
-""" Esta sección del código es la implementación de las clases anteriores. Todo se realiza sin input del usuario. """
+""" Esta sección del código es la implementación de las clases anteriores. Todo se realiza sin input del usuario.
+    Adicionalmente, se ejecutará el módulo de pruebas y se mostrará al usuario el resultado de los tests. """
 
 if __name__ == "__main__":
 
@@ -225,6 +285,7 @@ if __name__ == "__main__":
     rutas_list = [ruta1, ruta2, ruta3]
     rtp = {1: 'vidrio', 2: 'papel', 3: 'plástico', 4: 'metal', 5: 'residuos orgánicos', 6: 'otro'}
     trc = CentroAcopio()
+    trc.rutas.append(ruta1, ruta2, ruta3)
 
     trc.addEmpleado(Empleado(12345678, 'Efraín Rada', 'eradaa@uninorte.edu.co', '3128267589', 'Conductor'))
     trc.addEmpleado(Empleado(98765432, 'Carlos Sánchez', '', '3104567890', 'Conductor'))
@@ -257,52 +318,16 @@ if __name__ == "__main__":
     cm1 = trc.camiones[0]
     cm2 = trc.camiones[1]
 
+    horas = []
     for ruta in rutas_list:
-        cm1.recogerResiduo(Residuo(20 + 10 * rnd.random(), rnd.randint(1,6)))
+        cm1.recogerResiduo(Residuo(20 + 10 * rnd.random(), 1))
         cm1.recogerResiduo(Residuo(30 + 10 * rnd.random(), rnd.randint(1,6)))
-        trc.registrarTurno(ruta, cm1)
-        cm2.recogerResiduo(Residuo(20 + 10 * rnd.random(), rnd.randint(1,6)))
+        horas.append(trc.registrarTurno(ruta, cm1).strftime('%d/%m/%Y %H:%M'))
+        cm2.recogerResiduo(Residuo(20 + 10 * rnd.random(), 1))
         cm2.recogerResiduo(Residuo(30 + 10 * rnd.random(), rnd.randint(1,6)))
-        trc.registrarTurno(ruta, cm2)
+        horas.append(trc.registrarTurno(ruta, cm2).strftime('%d/%m/%Y %H:%M'))  
 
-    
+    print(horas)  
+
     unittest.main()
     
-
-
-
-
-
-""" La empresa de manejo de residuos “TrashCity” necesita un sistema de información
-para administrar su operación. El primer servicio de la empresa consiste en la
-recolección de los residuos de la ciudad: camiones de la empresa recorren la ciudad
-en rutas preestablecidas tomando los residuos dispuestos por los usuarios. Una ruta
-contiene la serie de puntos geográficos (latitud, longitud) por donde debe pasar es
-camión.
-
-Cada camión cuenta con un conductor y dos asistentes de recolección en un turno. Un turno
-define el recorrido completo de un camión y su equipo a recoger residuos, en un rango de día
-y hora de inicio y finalización, siguiendo una de las rutas existentes. En el turno se almacena
-la localización geográfica y tiempo en el que pasó en su recorrido.
-
-Al final de turno, la carga del camión pasa a ser clasificada en un centro de acopio. El
-resultado de la separación se almacena en el sistema asociado al turno: cuántas toneladas
-de vidrio, papel, plástico, metal y residuos orgánicos.
-
-De los elementos camión y persona se almacena información básica de identificación.
-
-Para resolver este problema usted debe:
-a. Realizar un diagrama de clase UML para representar el modelo de la solución.
-(Criterios de evaluación: Clases necesarias, relaciones adecuadas, uso del estándar,
-estructura que reduce redundancia de información y facilidad de acceso a la
-información)
-
-b. Implemente en Python los métodos que permitan el cálculo de la cantidad de vidrio
-que se recogió en todas las rutas de un día en específico. Asuma que métodos get y
-set de los atributos ya existen, y que clases como LocalDateTime ya existen en el
-sistema. La clase de punto geográfico debe ser definida por en el UML.
-
-c. Implemente un plan de pruebas donde verifique la funcionalidad de su solución para
-este sistema de información.
-Nota: Deberá compartir si solución como un repositorio en git, donde se encuentre todo lo
-necesario para poder ejecutar y así mismo la documentación lo más detallada posible. """
