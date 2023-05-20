@@ -1,0 +1,86 @@
+@startuml
+
+class Turno {
+    - ruta: Ruta
+    - camion: Camión
+    - h_inicio: Datetime
+    - h_fin: Datetime
+    - duracion: Datetime
+    - residuos: list[Residuo]
+    + getEmpleados(): list[Personal]
+}
+
+class IteradorResiduosTurno {
+    - datos: list
+    - index: int
+}
+
+class CentroAcopio {
+    - _instance: CentroAcopio
+    - tipos: dict[int: str]
+    - turnos: list[Turno]
+    - camiones: list[Camión]
+    - empleados: list[Empleado]
+    - rutas: list[Ruta]
+    - residuos: dict[str: list[Residuo]]
+    + addEmpleado(Empleado)
+    + addCamion(Camion)
+    + removeEmpleado(Empleado)
+    + removeCamion(Camion)
+    + getCantidadResiduo(str): float
+    + registrarTurno(ruta, camion)
+    + addTurno(turno)
+    + clasificarResiduos(turno)
+}
+
+class Empleado {
+    - id: int
+    - nombre: str
+    - email: str
+    - celular: int
+    - tipo: str
+    - asignado: bool
+}
+
+class PuntoGeografico {
+    - latitud: float
+    - longitud: float
+}
+
+class Camion {
+    + placa: str
+    - marca: str
+    - combustible: int
+    + capacidad: float
+    + personal: list[Empleado]
+    + residuos: list[Residuo]
+    + addPersonal(empleado: Empleado)
+    + removePersonal(empleado: Empleado)
+    + recogerResiduo(residuo)
+}
+
+class Residuo {
+    - masa: float
+    - tipo: str
+    - tipos: dict[int: str]
+}
+
+class Ruta {
+    - ubicaciones: list[PuntoGeografico]
+}
+
+Turno "1" *-- "1" Ruta
+Turno "1" o-- "1" Camion
+Turno "1" *-- "n" Residuo
+Turno *-- IteradorResiduosTurno
+
+CentroAcopio "1" <-- Turno
+CentroAcopio "1" <-- Camion
+CentroAcopio "1" <-- Empleado
+CentroAcopio -- CentroAcopio: Singleton
+
+Camion o-- Empleado
+Camion "1" -- "n" Residuo
+PuntoGeografico "n" --* "1" Ruta
+
+@enduml
